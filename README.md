@@ -4,6 +4,7 @@ Dependencies
 ------------
 
 [json-simple](https://code.google.com/p/json-simple/downloads/list)
+
 [commons-codec](http://commons.apache.org/proper/commons-codec/download_codec.cgi)
 
 Example usage
