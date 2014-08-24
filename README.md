@@ -15,7 +15,7 @@ import net.richardbondi.chainapi.transaction.Transaction;
 ```
 
 ```java
-chain = new ChainAPI("YOUR-API-KEY", "YOUR-API-SECRET", true); // true for testnet, false or ommit for mainnet
+ChainAPI chain = new ChainAPI("YOUR-API-KEY", "YOUR-API-SECRET", true); // true for testnet, false or ommit for mainnet
 List<Transaction> transactions = chain.getAddressTransactions("YOUR-ADDRESS");
 for(Transaction transaction: transactions) {
     System.out.println("Transaction amount BTC: "+ChainAPI.BTCvalue(transaction.getAmount()));
