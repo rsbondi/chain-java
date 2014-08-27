@@ -8,19 +8,31 @@ import net.richardbondi.chainapi.transaction.Transaction;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.richardbondi.chainapi.webhook.Webhook;
 import net.richardbondi.chainapi.webhook.WebhookEvent;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.net.util.SSLContextUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
 public class ChainAPI {
 
@@ -55,6 +67,34 @@ public class ChainAPI {
         this.keyId = keyId;
         this.keySecret = keySecret;
         this.baseUrl = test ? ChainAPI.TEST_NET_API_URL : ChainAPI.MAIN_NET_API_URL;
+
+        CertificateFactory cf = null;
+        try {
+            cf = CertificateFactory.getInstance("X.509");
+            InputStream certFile = new FileInputStream("chain.pem.txt");
+            //InputStream certFile = getClass().getClassLoader().getResourceAsStream("chain.pem.txt");
+            Certificate ca = cf.generateCertificate(certFile); // this is java.security.cert.Certificate;
+
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("ca", ca);
+
+            TrustManager trustManager = TrustManagerUtils.getDefaultTrustManager(keyStore);
+            SSLContext sslContext = SSLContextUtils.createSSLContext("TLS", null /*keyManager*/, trustManager);
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+        } catch (CertificateException e) {
+            System.out.println(e.getMessage());
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println(e.getMessage());
+        } catch (KeyStoreException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (GeneralSecurityException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
@@ -75,7 +115,7 @@ public class ChainAPI {
 
     /**
      * basic balance details for multiple addresses
-     * @param address
+     * @param address the address to fetch
      * @return list of address details
      */
     public List<Address> getAddress(String[] address) {
@@ -100,7 +140,7 @@ public class ChainAPI {
      * @return list of transactions
      */
     public List<Transaction> getAddressTransactions(String[] address) {
-        return this.getAddressTransactions(this.addressSlug(address), 50);
+        return this.getAddressTransactions(addressSlug(address), 50);
     }
 
     /**
@@ -110,7 +150,7 @@ public class ChainAPI {
      * @return list of transactions
      */
     public List<Transaction> getAddressTransactions(String[] address, int limit) {
-        return this.getAddressTransactions(this.addressSlug(address), limit);
+        return this.getAddressTransactions(addressSlug(address), limit);
     }
 
     /**
@@ -130,7 +170,7 @@ public class ChainAPI {
      */
     public List<Transaction> getAddressTransactions(String address, int limit) {
         try {
-            URL url = new URL(this.baseUrl + "addresses/" + address +"/transactions");
+            URL url = new URL(this.baseUrl + "addresses/" + address +"/transactions"); //TODO: add liimit
             JSONArray array=(JSONArray)this._apiRequest(url);
             List<Transaction> transactions = new ArrayList<Transaction>();
             for(int o=0; o<array.size(); o++) {
@@ -150,7 +190,7 @@ public class ChainAPI {
      * @return the outputs
      */
     public List<Output> getUnspents(String[] address) {
-        return this.getUnspents(this.addressSlug(address));
+        return this.getUnspents(addressSlug(address));
     }
 
     /**
@@ -466,9 +506,9 @@ public class ChainAPI {
     private Object _apiRequest(URL url, String method, String urlParameters) {
         String authStr = this.keyId + ":" + this.keySecret;
 
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestMethod(method);
             byte[] authEncBytes = Base64.encodeBase64(authStr.getBytes());
             String authStringEnc = new String(authEncBytes);
@@ -492,7 +532,7 @@ public class ChainAPI {
 
             int numCharsRead;
             char[] charArray = new char[1024];
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while ((numCharsRead = isr.read(charArray)) > 0) {
                 sb.append(charArray, 0, numCharsRead);
             }
