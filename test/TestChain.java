@@ -4,6 +4,7 @@ import com.azazar.bitcoin.jsonrpcclient.BitcoinJSONRPCClient;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import net.richardbondi.chainapi.ChainAPI;
+import net.richardbondi.chainapi.ChainApiException;
 import net.richardbondi.chainapi.address.Address;
 import net.richardbondi.chainapi.block.Block;
 import net.richardbondi.chainapi.transaction.OpReturn;
@@ -32,7 +33,7 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testAddress() {
+    public void testAddress() throws ChainApiException {
         initTests(true);
         List<Address> addressList = chain.getAddress(addresses) ;
         for(Address address : addressList) {
@@ -41,7 +42,7 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testAddressTransactions() {
+    public void testAddressTransactions() throws ChainApiException {
         initTests(true);
         List<Transaction> transactions = chain.getAddressTransactions(addresses[0]);
         for(Transaction transaction: transactions) {
@@ -49,7 +50,7 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testUnspents() {
+    public void testUnspents() throws ChainApiException {
         initTests(true);
         List<Output> outs = chain.getUnspents(addresses[0]) ;
         for(Output out : outs) {
@@ -58,26 +59,26 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testAddressOpReturn() {
+    public void testAddressOpReturn() throws ChainApiException {
         initTests(true);
         List<OpReturn> returns = chain.getAddressOpReturns(addresses[1]);
         for(OpReturn ret: returns)
             System.out.println("text: " + ret.getText()) ;
     }
 
-    public void testTransaction() {
+    public void testTransaction() throws ChainApiException {
         initTests(true);
         Transaction transaction = chain.getTransaction("TRANSACTION-HASH") ;
         System.out.println("Transaction amount BTC: "+ChainAPI.BTCvalue(transaction.getAmount()));
     }
 
-    public void testTransactionOpReturn() {
+    public void testTransactionOpReturn() throws ChainApiException {
         initTests(true);
         OpReturn op = chain.getTransactionOpReturn("TRANSACTION-HASH");
         System.out.println("text: " + op.getText()) ;
     }
 
-    public void testSendTransaction() {
+    public void testSendTransaction() throws ChainApiException {
         initTests(true);
         try {
             Bitcoin bitcoin = new BitcoinJSONRPCClient(true);
@@ -113,7 +114,7 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testBlock() {
+    public void testBlock() throws ChainApiException {
         initTests(true);
         Block block = chain.getBlock(276618L);
         String hash = block.getHash();
@@ -127,7 +128,7 @@ public class TestChain extends TestCase {
 
     }
 
-    public void testBlockOpReturns () {
+    public void testBlockOpReturns () throws ChainApiException {
         initTests(false);
         Long height = 316322L;
         List<OpReturn> op = chain.getBlockOpReturns(height);
@@ -141,14 +142,14 @@ public class TestChain extends TestCase {
         Assert.assertEquals(op.get(0).getTransactionHash(), op2.get(0).getTransactionHash());
     }
 
-    public void testCreateWebhook () {
+    public void testCreateWebhook () throws ChainApiException {
         initTests(true);
         Webhook webhook = chain.createWebhook("http://username:password@yourdomain.com");
         System.out.println("Webhook ID: " + webhook.getId()) ;
 
     }
 
-    public void testListWebhooks() {
+    public void testListWebhooks() throws ChainApiException {
         initTests(true);
         List<Webhook> webhooks = chain.listWebhooks();
         for(Webhook webhook : webhooks) {
@@ -156,18 +157,18 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testUpdateWebhook() {
+    public void testUpdateWebhook() throws ChainApiException {
         initTests(true);
         Webhook webhook = chain.updateWebhook("WEBHOOK-ID","http://username:password@updateddomain.com");
     }
 
-    public void testDeleteWebhook() {
+    public void testDeleteWebhook() throws ChainApiException {
         initTests(true);
         Webhook webhook = chain.deleteWebhook("WEBHOOK-ID");
         System.out.println(webhook.getId());
     }
 
-    public void testCreateWebhookEvent() {
+    public void testCreateWebhookEvent() throws ChainApiException {
         initTests(true);
         WebhookEvent createEvent = new WebhookEvent();
         createEvent.setWebhookId("WEBHOOK-ID");
@@ -179,7 +180,7 @@ public class TestChain extends TestCase {
         System.out.println("Event Id: " + webhookEvent.getId());
     }
 
-    public void testListWebhookEvents() {
+    public void testListWebhookEvents() throws ChainApiException {
         initTests(true);
         List<WebhookEvent> events = chain.listWebhookEvents("WEBHOOK-ID");
         if(events.size() == 0) {
@@ -190,7 +191,7 @@ public class TestChain extends TestCase {
         }
     }
 
-    public void testDeleteWebhookEvent () {
+    public void testDeleteWebhookEvent () throws ChainApiException {
         initTests(true);
         List<WebhookEvent> events = chain.deleteWebhookEvent("WEBHOOK-ID", "address-transaction", addresses[0]) ;
         for(WebhookEvent event: events) {

@@ -71,8 +71,8 @@ public class ChainAPI {
         CertificateFactory cf = null;
         try {
             cf = CertificateFactory.getInstance("X.509");
-            InputStream certFile = new FileInputStream("chain.pem.txt");
-            //InputStream certFile = getClass().getClassLoader().getResourceAsStream("chain.pem.txt");
+            //InputStream certFile = new FileInputStream("chain.pem.txt");
+            InputStream certFile = getClass().getClassLoader().getResourceAsStream("chain.pem.txt");
             Certificate ca = cf.generateCertificate(certFile); // this is java.security.cert.Certificate;
 
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -102,7 +102,7 @@ public class ChainAPI {
      * @param address the address whose details you want to retrieve
      * @return the address details
      */
-    public Address getAddress(String address) {
+    public Address getAddress(String address)  throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl + "addresses/" + address);
             JSONObject obj=(JSONObject)this._apiRequest(url);
@@ -118,7 +118,7 @@ public class ChainAPI {
      * @param address the address to fetch
      * @return list of address details
      */
-    public List<Address> getAddress(String[] address) {
+    public List<Address> getAddress(String[] address)  throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl+ "addresses/" + ChainAPI.addressSlug(address));
             JSONArray array=(JSONArray)this._apiRequest(url);
@@ -139,7 +139,7 @@ public class ChainAPI {
      * @param address array of addresses
      * @return list of transactions
      */
-    public List<Transaction> getAddressTransactions(String[] address) {
+    public List<Transaction> getAddressTransactions(String[] address) throws ChainApiException {
         return this.getAddressTransactions(addressSlug(address), 50);
     }
 
@@ -149,7 +149,7 @@ public class ChainAPI {
      * @param limit the maximum number of addresses to return
      * @return list of transactions
      */
-    public List<Transaction> getAddressTransactions(String[] address, int limit) {
+    public List<Transaction> getAddressTransactions(String[] address, int limit) throws ChainApiException{
         return this.getAddressTransactions(addressSlug(address), limit);
     }
 
@@ -158,7 +158,7 @@ public class ChainAPI {
      * @param address array of addresses
      * @return list of transactions
      */
-    public List<Transaction> getAddressTransactions(String address) {
+    public List<Transaction> getAddressTransactions(String address) throws ChainApiException {
         return this.getAddressTransactions(address, 50);
     }
 
@@ -168,9 +168,9 @@ public class ChainAPI {
      * @param limit the maximum number of addresses to return
      * @return list of transactions
      */
-    public List<Transaction> getAddressTransactions(String address, int limit) {
+    public List<Transaction> getAddressTransactions(String address, int limit) throws ChainApiException {
         try {
-            URL url = new URL(this.baseUrl + "addresses/" + address +"/transactions"); //TODO: add liimit
+            URL url = new URL(this.baseUrl + "addresses/" + address +"/transactions?limit="+limit);
             JSONArray array=(JSONArray)this._apiRequest(url);
             List<Transaction> transactions = new ArrayList<Transaction>();
             for(int o=0; o<array.size(); o++) {
@@ -189,7 +189,7 @@ public class ChainAPI {
      * @param address the address
      * @return the outputs
      */
-    public List<Output> getUnspents(String[] address) {
+    public List<Output> getUnspents(String[] address) throws ChainApiException {
         return this.getUnspents(addressSlug(address));
     }
 
@@ -198,7 +198,7 @@ public class ChainAPI {
      * @param address the address
      * @return the outputs
      */
-    public List<Output> getUnspents(String address) {
+    public List<Output> getUnspents(String address) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl + "addresses/" + address +"/unspents");
             JSONArray array=(JSONArray)this._apiRequest(url);
@@ -219,7 +219,7 @@ public class ChainAPI {
      * @param address the address
      * @return OP_RETURN
      */
-    public List<OpReturn> getAddressOpReturns(String address) {
+    public List<OpReturn> getAddressOpReturns(String address) throws ChainApiException {
         return this._geOpReturns("addresses", address);
     }
 
@@ -228,7 +228,7 @@ public class ChainAPI {
      * @param hash the transaction hash
      * @return the transaction
      */
-    public Transaction getTransaction(String hash) {
+    public Transaction getTransaction(String hash) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl+ "transactions/" + hash);
             JSONObject json = (JSONObject)this._apiRequest(url);
@@ -244,7 +244,7 @@ public class ChainAPI {
      * @param hash transaction hash
      * @return OP_RETURN
      */
-    public OpReturn getTransactionOpReturn(String hash) {
+    public OpReturn getTransactionOpReturn(String hash) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl+ "transactions/" + hash +"/op-return");
             JSONObject json = (JSONObject)this._apiRequest(url);
@@ -260,7 +260,7 @@ public class ChainAPI {
      * @param transaction a signed hex transaction
      * @return the newly created transaction hash
      */
-    public String sendTransaction(String transaction) {
+    public String sendTransaction(String transaction) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl + "transactions");
             JSONObject body = new JSONObject();
@@ -278,7 +278,7 @@ public class ChainAPI {
      * @param hash the block hash
      * @return the block
      */
-    public Block getBlock(String hash) {
+    public Block getBlock(String hash) throws ChainApiException {
         return this._getBlock(hash);
     }
 
@@ -287,11 +287,11 @@ public class ChainAPI {
      * @param height the block height
      * @return the block
      */
-    public Block getBlock(Long height) {
+    public Block getBlock(Long height) throws ChainApiException {
         return this._getBlock(height.toString());
     }
 
-    private Block _getBlock(String hash) {
+    private Block _getBlock(String hash) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl + "blocks/" + hash);
             JSONObject json = (JSONObject) this._apiRequest(url);
@@ -307,7 +307,7 @@ public class ChainAPI {
      * @param height block height
      * @return list of OP_RETURN
      */
-    public  List<OpReturn> getBlockOpReturns(Long height) {
+    public  List<OpReturn> getBlockOpReturns(Long height) throws ChainApiException {
         return this._geOpReturns("blocks", height.toString());
     }
 
@@ -316,7 +316,7 @@ public class ChainAPI {
      * @param hash the block hash
      * @return list of OP_RETURNs
      */
-    public  List<OpReturn> getBlockOpReturns(String hash) {
+    public  List<OpReturn> getBlockOpReturns(String hash) throws ChainApiException {
         return this._geOpReturns("blocks", hash);
     }
 
@@ -325,7 +325,7 @@ public class ChainAPI {
      * @param url the url where the webhook is directed
      * @return a webhook with newly created id
      */
-    public Webhook createWebhook(String url) {
+    public Webhook createWebhook(String url) throws ChainApiException {
         return this.createWebhook("", url);
     }
 
@@ -335,7 +335,7 @@ public class ChainAPI {
      * @param url the url where the webhook is directed
      * @return a webhook with newly created id
      */
-    public Webhook createWebhook(String id, String url) {
+    public Webhook createWebhook(String id, String url) throws ChainApiException {
         try {
             URL apiurl = new URL(ChainAPI.WEBHOOK_URL);
             JSONObject body = new JSONObject();
@@ -355,7 +355,7 @@ public class ChainAPI {
      * list all webhooks tied to the developer id
      * @return list of webhooks
      */
-    public List<Webhook> listWebhooks() {
+    public List<Webhook> listWebhooks() throws ChainApiException {
         try {
             URL url = new URL(ChainAPI.WEBHOOK_URL);
             JSONArray array=(JSONArray)this._apiRequest(url);
@@ -377,7 +377,7 @@ public class ChainAPI {
      * @param url new location
      * @return the updated webhook
      */
-    public Webhook updateWebhook(String id, String url) {
+    public Webhook updateWebhook(String id, String url) throws ChainApiException {
         try {
             URL apiurl = new URL(ChainAPI.WEBHOOK_URL + "/"+id);
             JSONObject body = new JSONObject();
@@ -395,7 +395,7 @@ public class ChainAPI {
      * @param id the id of the webhook to be deleted
      * @return the deleted webhook
      */
-    public Webhook deleteWebhook(String id) {
+    public Webhook deleteWebhook(String id) throws ChainApiException {
         try {
             URL apiurl = new URL(ChainAPI.WEBHOOK_URL + "/"+id);
             JSONObject body = new JSONObject();
@@ -412,7 +412,7 @@ public class ChainAPI {
      * @param event a webhook event with webhook id, event, block_chain(main or test), address and confirmations
      * @return newly created event
      */
-    public WebhookEvent createWebhookEvent(WebhookEvent event) {
+    public WebhookEvent createWebhookEvent(WebhookEvent event) throws ChainApiException {
         try {
             URL apiurl = new URL(ChainAPI.WEBHOOK_URL + "/" + event.getWebhookId() + "/events");
             JSONObject body = new JSONObject();
@@ -433,7 +433,7 @@ public class ChainAPI {
      * @param id the webhook id
      * @return the events
      */
-    public List<WebhookEvent> listWebhookEvents(String id) {
+    public List<WebhookEvent> listWebhookEvents(String id) throws ChainApiException {
         try {
             URL url = new URL(ChainAPI.WEBHOOK_URL + "/" + id + "/events");
             JSONArray array=(JSONArray)this._apiRequest(url);
@@ -456,7 +456,7 @@ public class ChainAPI {
      * @param address the address of the event to be deleted
      * @return a list of webhook events
      */
-    public List<WebhookEvent> deleteWebhookEvent(String id, String eventType, String address) {
+    public List<WebhookEvent> deleteWebhookEvent(String id, String eventType, String address) throws ChainApiException {
         try {
             URL apiurl = new URL(ChainAPI.WEBHOOK_URL + "/"+id+"/events/"+eventType+"/"+address);
             JSONObject body = new JSONObject();
@@ -475,7 +475,7 @@ public class ChainAPI {
 
     /* helper functions */
 
-    private List<OpReturn> _geOpReturns(String source, String item) {
+    private List<OpReturn> _geOpReturns(String source, String item) throws ChainApiException {
         try {
             URL url = new URL(this.baseUrl+ source + "/" + item +"/op-returns");
             JSONArray array=(JSONArray)this._apiRequest(url);
@@ -499,11 +499,11 @@ public class ChainAPI {
         return new BigDecimal(amount).divide(new BigDecimal(100000));
     }
 
-    private Object _apiRequest(URL url) {
+    private Object _apiRequest(URL url) throws ChainApiException {
         return this._apiRequest(url, "GET", null);
     }
 
-    private Object _apiRequest(URL url, String method, String urlParameters) {
+    private Object _apiRequest(URL url, String method, String urlParameters) throws ChainApiException {
         String authStr = this.keyId + ":" + this.keySecret;
 
         HttpsURLConnection connection = null;
@@ -541,11 +541,10 @@ public class ChainAPI {
             JSONParser parser=new JSONParser();
             return parser.parse(result);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            throw new ChainApiException(e.getMessage());
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            throw new ChainApiException(e.getMessage());
         }
-         return null;
     }
 
     public String getKeyId() {
